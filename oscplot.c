@@ -1426,6 +1426,23 @@ static void channel_color_icon_set_color(GdkPixbuf *pb, GdkColor *color)
 		}
 }
 
+static bool show_channel(struct iio_channel *chn)
+{
+	const char *id = iio_channel_get_id(chn);
+	unsigned int i, nb_attrs = iio_channel_get_attrs_count(chn);
+
+	if (iio_channel_is_output(chn) || !strcmp(id, "timestamp"))
+		return false;
+
+	for (i = 0; i < nb_attrs; i++) {
+		const char *attr = iio_channel_get_attr(chn, i);
+		if (!strcmp(attr, "en"))
+			return true;
+	}
+
+	return false;
+}
+
 static void device_list_treeview_init(OscPlot *plot)
 {
 	OscPlotPrivate *priv = plot->priv;
@@ -1453,23 +1470,18 @@ static void device_list_treeview_init(OscPlot *plot)
 
 		for (j = 0; j < nb_channels; j++) {
 			struct iio_channel *ch = iio_device_get_channel(dev, j);
-			const char *id;
-
-			if (iio_channel_is_output(ch))
+			if (!show_channel(ch))
 				continue;
 
-			id = iio_channel_get_id(ch);
-			if (!strcmp(id, "timestamp"))
-				continue;
-
-			name = iio_channel_get_name(ch);
+			name = iio_channel_get_name(ch) ?:
+				iio_channel_get_id(ch);
 			new_settings = channel_settings_new(plot);
 			new_icon = channel_color_icon_new(plot);
 			icon_color = &new_settings->graph_color;
 			channel_color_icon_set_color(new_icon, icon_color);
 			gtk_tree_store_append(treestore, &child, &iter);
 			gtk_tree_store_set(treestore, &child,
-					ELEMENT_NAME, name ?: id,
+					ELEMENT_NAME, name,
 					IS_CHANNEL, TRUE,
 					CHANNEL_ACTIVE, FALSE,
 					ELEMENT_REFERENCE, ch,
