@@ -395,11 +395,6 @@ static int dmm_init(GtkWidget *notebook)
 	GtkBuilder *builder;
 	GtkWidget *dmm_panel;
 
-	fprintf(stderr, "create context\n");
-	ctx = iio_create_local_context();
-	if (!ctx)
-		return -1;
-
 	builder = gtk_builder_new();
 	nbook = GTK_NOTEBOOK(notebook);
 
@@ -575,7 +570,7 @@ static bool dmm_identify(void)
 	unsigned int i, num;
 	bool ret = false;
 
-	ctx = iio_create_local_context();
+	ctx = osc_create_context();
 	if (!ctx)
 		return false;
 
@@ -592,7 +587,8 @@ static bool dmm_identify(void)
 		}
 	}
 
-	iio_context_destroy(ctx);
+	if (!ret)
+		iio_context_destroy(ctx);
 	return ret;
 }
 
