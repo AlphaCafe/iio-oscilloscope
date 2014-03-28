@@ -1378,7 +1378,7 @@ static void init_device_list(void)
 {
 	unsigned int i, j;
 
-	ctx = iio_create_local_context();
+	ctx = osc_create_context();
 	if (!ctx)
 		return;
 
@@ -1836,5 +1836,14 @@ gint main (int argc, char **argv)
 		return 0;
 	else
 		return -1;
+}
+
+struct iio_context * osc_create_context(void)
+{
+	char *host = getenv("OSC_REMOTE");
+	if (host)
+		return iio_create_network_context(host);
+	else
+		return iio_create_local_context();
 }
 
