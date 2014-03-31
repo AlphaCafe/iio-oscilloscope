@@ -1122,6 +1122,11 @@ static ssize_t demux_sample(const struct iio_channel *chn,
 		void *sample, size_t size, void *d)
 {
 	struct extra_info *info = iio_channel_get_data(chn);
+	struct extra_dev_info *dev_info = iio_device_get_data(info->dev);
+
+	/* Prevent buffer overflow */
+	if (info->offset == dev_info->sample_count)
+		return 0;
 
 	if (size == 1) {
 		int8_t val;
@@ -1149,6 +1154,7 @@ static gboolean capture_process(void)
 		struct extra_dev_info *dev_info = iio_device_get_data(dev);
 		unsigned int i, sample_size = iio_device_get_sample_size(dev);
 		unsigned int nb_channels = iio_device_get_channels_count(dev);
+		unsigned int sample_count = dev_info->sample_count;
 
 		if (sample_size == 0)
 			continue;
@@ -1160,8 +1166,13 @@ static gboolean capture_process(void)
 			info->offset = 0;
 		}
 
-		iio_buffer_refill(dev_info->buffer);
-		iio_buffer_foreach_sample(dev_info->buffer, demux_sample, NULL);
+		do {
+			ssize_t ret;
+			iio_buffer_refill(dev_info->buffer);
+			ret = iio_buffer_foreach_sample(
+					dev_info->buffer, demux_sample, NULL);
+			sample_count -= ret / sample_size;
+		} while (sample_count);
 	}
 
 	update_all_plots();
