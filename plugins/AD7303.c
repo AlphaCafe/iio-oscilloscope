@@ -77,14 +77,17 @@ static gfloat *float_soft_buff;
 static gdouble wave_ampl;
 static gdouble wave_offset;
 
-static int buffer_open()
+static int buffer_open(unsigned int length)
 {
 	struct iio_device *trigger = iio_context_find_device(ctx, "hrtimer-1");
 	struct iio_channel *ch0 = iio_device_find_channel(dev, "voltage0", true);
+	unsigned int sample_size;
 
 	iio_device_set_trigger(dev, trigger);
 	iio_channel_enable(ch0);
-	return iio_device_open(dev);
+
+	sample_size = iio_device_get_sample_size(dev);
+	return iio_device_open(dev, length / sample_size);
 }
 
 static int buffer_close()
@@ -279,7 +282,7 @@ static void save_button_clicked(GtkButton *btn, gpointer data)
 		rx_update_labels();
 	} else if (gtk_toggle_button_get_active((GtkToggleButton *)radio_waveform)){
 		generateWavePeriod();
-		dev_opened = !buffer_open();
+		dev_opened = !buffer_open(buffer_size * 10);
 		startWaveGeneration();
 	}
 }
