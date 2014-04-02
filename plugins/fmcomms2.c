@@ -531,7 +531,7 @@ static void process_dac_buffer_file (const char *file_name)
 	for (i = 0; i < nb_channels; i++)
 		iio_channel_enable(iio_device_get_channel(dds, i));
 
-	ret = iio_device_open(dds);
+	ret = iio_device_open(dds, 0);
 	if (ret < 0) {
 		free(buf);
 		return;
@@ -800,20 +800,18 @@ static void show_all_I_and_Q(void)
 
 static void enable_dds(bool on_off)
 {
-	int ret = 0;
-
-	ret = iio_channel_attr_write_bool(
+	int ret = iio_channel_attr_write_bool(
 			iio_device_find_channel(dds, "altvoltage0", true),
 			"raw", on_off);
 	if (!ret) {
 		if (on_off)
-			ret = iio_device_open(dds);
+			ret = iio_device_open(dds, 0);
 		else if (dac_data_loaded)
 			ret = iio_device_close(dds);
 	}
 
 	if (ret < 0)
-		fprintf(stderr, "Failed to enable buffer: %d\n", ret);
+		fprintf(stderr, "Failed to toggle DDS: %d\n", ret);
 }
 
 static void manage_dds_mode()

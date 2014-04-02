@@ -358,7 +358,7 @@ void dac_buffer_config_file_set_cb(GtkFileChooser *chooser, gpointer data)
 	for (i = 0; i < nb_channels; i++)
 		iio_channel_enable(iio_device_get_channel(dac, i));
 
-	ret = iio_device_open(dac);
+	ret = iio_device_open(dac, 0);
 	if (!ret)
 		ret = (int) iio_device_write_raw(dac, buf, size);
 	if (ret != size) {
@@ -1390,16 +1390,17 @@ G_MODULE_EXPORT void cal_dialog(GtkButton *btn, Dialogs *data)
 
 static void enable_dds(bool on_off)
 {
-	iio_device_attr_write_bool(dac, "1A_raw", on_off);
+	int ret = iio_device_attr_write_bool(dac, "1A_raw", on_off);
 
-	if (on_off) {
-		iio_device_close(dac);
-	} else if (dac_data_loaded) {
-		struct iio_channel *ch = iio_device_find_channel(
-				dac, "voltage0", true);
-		iio_channel_enable(ch);
-		iio_device_open(dac);
+	if (!ret) {
+		if (on_off)
+			ret = iio_device_open(dac, 0);
+		else if (dac_data_loaded)
+			ret = iio_device_close(dac);
 	}
+
+	if (ret < 0)
+		fprintf(stderr, "Failed to toggle DDS: %d\n", ret);
 }
 
 static void manage_dds_mode()
