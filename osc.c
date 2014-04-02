@@ -491,7 +491,6 @@ static void close_active_buffers(void)
 			info->buffer = NULL;
 		}
 
-		iio_device_close(dev);
 		disable_all_channels(dev);
 	}
 }
@@ -1209,7 +1208,6 @@ static int capture_setup(void)
 		struct extra_dev_info *dev_info = iio_device_get_data(dev);
 		unsigned int nb_channels = iio_device_get_channels_count(dev);
 		unsigned int sample_size, sample_count = max_sample_count_from_plots(dev_info);
-		int ret;
 
 		for (j = 0; j < nb_channels; j++) {
 			struct iio_channel *ch = iio_device_get_channel(dev, j);
@@ -1233,12 +1231,12 @@ static int capture_setup(void)
 			info->data_ref = (gfloat *) g_new0(gfloat, sample_count);
 		}
 
-		ret = iio_device_open(dev);
-		if (ret < 0)
-			return ret;
-
 		dev_info->buffer = iio_device_create_buffer(dev,
-				sample_count * sample_size);
+				sample_count, false);
+		if (!dev_info->buffer) {
+			fprintf(stderr, "Unable to create buffer\n");
+			return -1;
+		}
 		dev_info->sample_count = sample_count;
 
 		iio_device_set_data(dev, dev_info);
