@@ -1365,7 +1365,7 @@ static int fmcomms2_init(GtkWidget *notebook)
 
 	ch1 = iio_device_find_channel(dev, "altvoltage0", true);
 	iio_spin_button_s64_init_from_builder(&rx_widgets[num_rx++],
-		dev, ch1, "RX_LO_frequency", builder,
+		dev, ch1, "frequency", builder,
 		"rx_lo_freq", &mhz_scale);
 
 	iio_toggle_button_init_from_builder(&rx_widgets[num_rx++],
@@ -1408,7 +1408,7 @@ static int fmcomms2_init(GtkWidget *notebook)
 	ch1 = iio_device_find_channel(dev, "altvoltage1", true);
 
 	iio_spin_button_s64_init_from_builder(&tx_widgets[num_tx++],
-		dev, ch1, "TX_LO_frequency", builder, "tx_lo_freq", &mhz_scale);
+		dev, ch1, "frequency", builder, "tx_lo_freq", &mhz_scale);
 
 	ch0 = iio_device_find_channel(dds, "TX1_I_F1", true);
 
